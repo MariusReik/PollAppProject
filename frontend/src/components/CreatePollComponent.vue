@@ -38,6 +38,8 @@
 
 <script setup>
 import { ref } from 'vue'
+import { getCurrentInstance } from 'vue';
+import { useKeycloak } from '../composables/useKeycloak';
 
 const creatorUsername = ref('')
 const question = ref('')
@@ -58,16 +60,22 @@ const addOption = () => {
 // In CreatePollComponent - modify the createPoll function
 const createPoll = async () => {
   try {
+    const keycloak = useKeycloak();
+    const token = keycloak.token;
+
     const response = await fetch('http://localhost:8080/polls', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({
         question: question.value,
         creatorUsername: creatorUsername.value,
         validUntil: new Date(validUntil.value).toISOString(),
         voteOptions: voteOptions.value
       })
-    })
+    });
 
     if (response.ok) {
       message.value = 'Poll created successfully!'

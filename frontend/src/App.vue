@@ -1,11 +1,19 @@
 <script setup>
-import CreatePollComponent from "./components/CreatePollComponent.vue";
-import VoteComponent from "./components/VoteComponent.vue";
+import { inject } from 'vue';
+import CreatePollComponent from './components/CreatePollComponent.vue';
+import VoteComponent from './components/VoteComponent.vue';
+
+const keycloak = inject('keycloak');
 </script>
 
 <template>
   <div id="app">
     <h1>Poll Application</h1>
+
+    <div v-if="keycloak?.authenticated">
+      <p>Welcome, {{ keycloak.tokenParsed?.preferred_username }}</p>
+      <button @click="keycloak.logout()">Logout</button>
+    </div>
 
     <div class="components">
       <CreatePollComponent />

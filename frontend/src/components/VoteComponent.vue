@@ -37,6 +37,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { getCurrentInstance } from 'vue';
+import { useKeycloak } from '../composables/useKeycloak';
 
 const polls = ref([])
 const voterUsername = ref('')
@@ -45,23 +47,36 @@ const message = ref('')
 
 const fetchPolls = async () => {
   try {
-    const response = await fetch('http://localhost:8080/polls')
-    polls.value = await response.json()
+    const keycloak = useKeycloak();
+    const token = keycloak.token;
+
+    const response = await fetch('http://localhost:8080/polls', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    polls.value = await response.json();
   } catch (error) {
-    message.value = 'Error fetching polls: ' + error.message
+    message.value = 'Error fetching polls: ' + error.message;
   }
-}
+};
 
 const vote = async (pollId) => {
   try {
+    const token = getCurrentInstance().appContext.config.globalProperties.$keycloak.token;
+
     const response = await fetch(`http://localhost:8080/polls/${pollId}/votes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({
         username: voterUsername.value,
         voteOptionId: selectedOptions.value[pollId]
       })
-    })
+    });
 
     if (response.ok) {
       message.value = 'Vote submitted successfully!'

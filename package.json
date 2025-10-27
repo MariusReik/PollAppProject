@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "keycloak-js": "^26.2.1",
+    "oidc-client-ts": "^3.3.0"
+  }
+}
