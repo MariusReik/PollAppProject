@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    container_name: pollapp-db
+    environment:
+      POSTGRES_DB: pollapp
+      POSTGRES_USER: pollapp
+      POSTGRES_PASSWORD: pollapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    container_name: pollapp-redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: pollapp-rabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.2
+    container_name: pollapp-keycloak
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+    command: start-dev
+    ports:
+      - "8080:8080"
+
+  backend:
+    build: ./backend
+    container_name: pollapp-backend
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - keycloak
+
+volumes:
+  postgres_data:

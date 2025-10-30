@@ -1,42 +1,32 @@
 package no.hvl.pollapp.domain;
 
+import jakarta.persistence.*;
+
+@Entity
 public class Vote {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String username;
-    private Long pollId;
-    private Long voteOptionId;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "option_id")
+    private VoteOption option;
 
     public Vote() {}
 
-    public Long getId() {
-        return id;
+    public Vote(User user, VoteOption option) {
+        this.user = user;
+        this.option = option;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public Long getPollId() {
-        return pollId;
-    }
-
-    public void setPollId(Long pollId) {
-        this.pollId = pollId;
-    }
-
-    public Long getVoteOptionId() {
-        return voteOptionId;
-    }
-
-    public void setVoteOptionId(Long voteOptionId) {
-        this.voteOptionId = voteOptionId;
-    }
+    public Long getId() { return id; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public VoteOption getOption() { return option; }
+    public void setOption(VoteOption option) { this.option = option; }
 }

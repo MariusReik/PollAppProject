@@ -2,33 +2,23 @@ package no.hvl.pollapp.controller;
 
 import no.hvl.pollapp.domain.Poll;
 import no.hvl.pollapp.domain.Vote;
-import no.hvl.pollapp.service.PollManager;
 import no.hvl.pollapp.service.PollEventPublisher;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import no.hvl.pollapp.service.PollManager;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/polls")
-@CrossOrigin(origins = "http://localhost:5173")
+@RequestMapping("/api/polls")
 public class PollController {
 
-    @Autowired
-    private PollManager pollManager;
+    private final PollManager pollManager;
+    private final PollEventPublisher eventPublisher; // you already have this in service package
 
-    @Autowired
-    private PollEventPublisher eventPublisher;
-
-    @PostMapping
-    public ResponseEntity<Poll> createPoll(@RequestBody Poll poll) {
-        Poll created = pollManager.addPoll(poll);
-
-        // Send event når et nytt poll opprettes
-        eventPublisher.publishVoteEvent(created.getQuestion(), "Poll created");
-
-        return ResponseEntity.ok(created);
+    public PollController(PollManager pollManager, PollEventPublisher eventPublisher) {
+        this.pollManager = pollManager;
+        this.eventPublisher = eventPublisher;
     }
 
     @GetMapping
@@ -38,32 +28,38 @@ public class PollController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Poll> getPoll(@PathVariable Long id) {
-        Poll poll = pollManager.getPoll(id);
-        return poll == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(poll);
+        try {
+            return ResponseEntity.ok(pollManager.getPollOrThrow(id));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping
+    public Poll createPoll(@RequestBody Poll poll) {
+        return pollManager.createPoll(poll);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePoll(@PathVariable Long id) {
-        if (pollManager.getPoll(id) == null) {
-            return ResponseEntity.notFound().build();
-        }
         pollManager.deletePoll(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{pollId}/votes")
-    public ResponseEntity<Vote> voteOnPoll(@PathVariable Long pollId, @RequestBody Vote vote) {
-        vote.setPollId(pollId);
-        Vote result = pollManager.addOrUpdateVote(vote);
+    // Voting endpoint here for convenience (you also have VoteController below)
+    @PostMapping("/{pollId}/vote")
+    public ResponseEntity<Vote> vote(@PathVariable Long pollId,
+                                     @RequestParam Long optionId,
+                                     @RequestParam String username) {
+        Vote result = pollManager.registerVote(pollId, optionId, username);
 
-        // Send event når noen stemmer
-        eventPublisher.publishVoteEvent(result.getPollId().toString(), "Vote registered");
+        // publish with explicit pollId/optionId (no getPollId() on Vote)
+        try {
+            eventPublisher.publishVoteEvent("Poll " + pollId, "Option " + optionId);
+        } catch (Exception ignored) {
+            // don't fail the request if messaging is down
+        }
 
         return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/{pollId}/votes")
-    public List<Vote> getVotesForPoll(@PathVariable Long pollId) {
-        return pollManager.getVotesForPoll(pollId);
     }
 }
