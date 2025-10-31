@@ -1,16 +1,32 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
+import { createApp } from 'vue';
+import App from './App.vue';
 import keycloak from './keycloak';
+import './style.css';
 
-keycloak.init({ onLoad: 'login-required' }).then(authenticated => {
+keycloak.init({ onLoad: 'login-required' })
+  .then(authenticated => {
     if (authenticated) {
-        const app = createApp(App);
-        app.provide('keycloak', keycloak); // ✅ Provide it here
-        app.mount('#app');
+      console.log('✅ Authenticated with Keycloak');
+      localStorage.setItem('token', keycloak.token);
+
+      const app = createApp(App);
+      app.provide('keycloak', keycloak);
+      app.mount('#app');
+
+      // Auto-refresh token every minute
+      setInterval(() => {
+        keycloak.updateToken(70).then(refreshed => {
+          if (refreshed) {
+            console.log('Token refreshed');
+            localStorage.setItem('token', keycloak.token);
+          }
+        }).catch(() => keycloak.logout());
+      }, 60000);
     } else {
-        window.location.reload();
+      console.warn('Not authenticated, reloading...');
+      window.location.reload();
     }
-});
-
-
+  })
+  .catch(error => {
+    console.error('Keycloak init failed:', error);
+  });

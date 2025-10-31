@@ -5,6 +5,23 @@ spring:
     password: pollapp
     driver-class-name: org.postgresql.Driver
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8080/realms/myrealm
+
+      client:
+        registration:
+          keycloak:
+            client-id: pollapp-backend
+            client-secret: <PASTE_YOUR_SECRET_HERE>
+            scope: openid,profile,email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+        provider:
+          keycloak:
+            issuer-uri: http://keycloak:8080/realms/myrealm
 
   jpa:
     hibernate:
