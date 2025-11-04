@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://pollapp-db:5432/pollapp
+    url: jdbc:postgresql://db:5432/pollapp
     username: pollapp
     password: pollapp
     driver-class-name: org.postgresql.Driver
@@ -15,7 +15,7 @@ spring:
         registration:
           keycloak:
             client-id: pollapp-backend
-            client-secret: <PASTE_YOUR_SECRET_HERE>
+            client-secret: your_secret_here
             scope: openid,profile,email
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"

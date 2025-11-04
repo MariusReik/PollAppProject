@@ -1,115 +1,65 @@
 <template>
-  <div class="vote-component">
-    <h2>Vote on Polls</h2>
-
-    <input
-        type="text"
-        v-model="voterUsername"
-        placeholder="Your Username"
-        required
-    />
+  <section class="panel">
+    <h2>Available Polls</h2>
+    <div v-if="polls.length === 0">No polls available.</div>
 
     <div v-for="poll in polls" :key="poll.id" class="poll">
       <h3>{{ poll.question }}</h3>
-      <p>Created by: {{ poll.creatorUsername }}</p>
-
-      <form @submit.prevent="vote(poll.id)">
-        <div v-for="option in poll.voteOptions" :key="option.id">
-          <label>
-            <input
-                type="radio"
-                :name="`poll-${poll.id}`"
-                :value="option.id"
-                v-model="selectedOptions[poll.id]"
-            />
-            {{ option.caption }}
-          </label>
-        </div>
-        <button type="submit" :disabled="!voterUsername || !selectedOptions[poll.id]">
-          Vote
+      <div>
+        <button v-for="opt in poll.options" :key="opt.id" @click="vote(poll.id, opt.id)">
+          {{ opt.text }}
         </button>
-      </form>
+      </div>
     </div>
-
-    <div v-if="message">{{ message }}</div>
-  </div>
+  </section>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { getCurrentInstance } from 'vue';
-import { useKeycloak } from '../composables/useKeycloak';
-
-const polls = ref([])
-const voterUsername = ref('')
-const selectedOptions = ref({})
-const message = ref('')
+import { ref, onMounted, inject } from "vue";
+const keycloak = inject("keycloak");
+const polls = ref([]);
 
 const fetchPolls = async () => {
   try {
-    const keycloak = useKeycloak();
-    const token = keycloak.token;
-
-    const response = await fetch('http://localhost:8080/polls', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const token = keycloak?.token;
+    const res = await fetch("http://localhost:8081/polls", {
+      headers: { "Authorization": `Bearer ${token}` }
     });
-
-    polls.value = await response.json();
-  } catch (error) {
-    message.value = 'Error fetching polls: ' + error.message;
+    if (!res.ok) throw new Error("Failed to fetch polls");
+    polls.value = await res.json();
+  } catch (e) {
+    console.error("Error fetching polls:", e);
   }
 };
 
-const vote = async (pollId) => {
+const vote = async (pollId, optionId) => {
   try {
-    const token = getCurrentInstance().appContext.config.globalProperties.$keycloak.token;
-
-    const response = await fetch(`http://localhost:8080/polls/${pollId}/votes`, {
-      method: 'POST',
+    const token = keycloak?.token;
+    const res = await fetch(`http://localhost:8081/polls/${pollId}/vote`, {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        username: voterUsername.value,
-        voteOptionId: selectedOptions.value[pollId]
-      })
+      body: JSON.stringify({ optionId })
     });
-
-    if (response.ok) {
-      message.value = 'Vote submitted successfully!'
-    } else {
-      message.value = 'Failed to submit vote'
-    }
-  } catch (error) {
-    message.value = 'Error: ' + error.message
+    if (!res.ok) throw new Error("Vote failed");
+    alert("Vote registered!");
+    fetchPolls();
+  } catch (e) {
+    console.error("Error voting:", e);
   }
-}
+};
 
-onMounted(fetchPolls)
+onMounted(fetchPolls);
 </script>
 
-<style scoped>
-.vote-component {
-  padding: 20px;
-  max-width: 500px;
-}
-
+<style>
 .poll {
-  border: 1px solid #ccc;
-  padding: 15px;
-  margin: 10px 0;
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
 }
-
-input[type="text"], button {
-  padding: 10px;
-  margin: 5px 0;
-}
-
-label {
-  display: block;
-  margin: 5px 0;
+button {
+  margin-right: 6px;
 }
 </style>

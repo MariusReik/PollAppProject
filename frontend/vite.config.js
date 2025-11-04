@@ -1,7 +1,21 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+    plugins: [vue()],
+    server: {
+        host: '0.0.0.0',       // nødvendig for Docker
+        port: 5173,
+        proxy: {
+            '/api': {
+                target: 'http://backend:8080',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, ''),
+            },
+        },
+    },
+    define: {
+        __APP_ENV__: process.env.VITE_ENV,
+    },
 })

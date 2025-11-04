@@ -1,9 +1,21 @@
-import { inject } from 'vue';
+import Keycloak from 'keycloak-js'
 
-export function useKeycloak() {
-    const keycloak = inject('keycloak');
-    if (!keycloak) {
-        throw new Error('Keycloak instance not provided');
+let keycloakInstance = null
+
+export function initKeycloak() {
+    if (!keycloakInstance) {
+        keycloakInstance = new Keycloak({
+            url: import.meta.env.VITE_KEYCLOAK_URL,
+            realm: import.meta.env.VITE_KEYCLOAK_REALM,
+            clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
+        })
     }
-    return keycloak;
+    return keycloakInstance
+}
+
+export function getKeycloak() {
+    if (!keycloakInstance) {
+        throw new Error('Keycloak not initialized. Call initKeycloak() first.')
+    }
+    return keycloakInstance
 }

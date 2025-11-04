@@ -1,38 +1,70 @@
-<script setup>
-import { inject } from 'vue';
-import CreatePollComponent from './components/CreatePollComponent.vue';
-import VoteComponent from './components/VoteComponent.vue';
-
-const keycloak = inject('keycloak');
-</script>
-
 <template>
-  <div id="app">
-    <h1>Poll Application</h1>
+  <div class="app">
+    <header class="bar">
+      <h1>PollApp</h1>
+      <button @click="logout">Logout</button>
+    </header>
 
-    <div v-if="keycloak?.authenticated">
-      <p>Welcome, {{ keycloak.tokenParsed?.preferred_username }}</p>
-      <button @click="keycloak.logout()">Logout</button>
-    </div>
-
-    <div class="components">
+    <main>
       <CreatePollComponent />
       <VoteComponent />
-    </div>
+    </main>
+
+    <footer class="foot">
+      © 2025 PollApp
+    </footer>
   </div>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<script setup>
+import { inject } from "vue";
+import CreatePollComponent from "./components/CreatePollComponent.vue";
+import VoteComponent from "./components/VoteComponent.vue";
+
+const keycloak = inject("keycloak");
+const logout = () => keycloak.logout({ redirectUri: window.location.origin });
+</script>
+
+<style>
+body {
+  margin: 0;
+  background: #f5f5f5;
+  font-family: Arial, sans-serif;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.app {
+  max-width: 900px;
+  margin: 40px auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 24px;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+.bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 12px;
+}
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #0056b3;
+}
+main {
+  margin-top: 24px;
+}
+.foot {
+  border-top: 1px solid #ddd;
+  text-align: center;
+  color: #777;
+  margin-top: 24px;
+  padding-top: 8px;
 }
 </style>

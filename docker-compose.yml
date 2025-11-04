@@ -12,12 +12,16 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pollnet
 
   redis:
     image: redis:latest
     container_name: pollapp-redis
     ports:
       - "6379:6379"
+    networks:
+      - pollnet
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -25,6 +29,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    networks:
+      - pollnet
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.4
@@ -38,9 +44,11 @@ services:
       - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
     command: start-dev
     ports:
-      - "8082:8080"
+      - "8082:8080" # external:internal
     depends_on:
       - db
+    networks:
+      - pollnet
 
   backend:
     build: ./backend
@@ -48,13 +56,15 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
     ports:
-      - "8080:8080"
+      - "8081:8080"
     depends_on:
       - db
       - redis
       - rabbitmq
       - keycloak
     restart: always
+    networks:
+      - pollnet
 
   frontend:
     build: ./frontend
@@ -62,11 +72,18 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_PORT=5173
-      - VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://backend:8080
+      - VITE_KEYCLOAK_URL=http://keycloak:8080
+      - VITE_KEYCLOAK_REALM=myrealm
+      - VITE_KEYCLOAK_CLIENT_ID=myclient
     depends_on:
       - backend
-
+    networks:
+      - pollnet
 
 volumes:
   postgres_data:
+
+networks:
+  pollnet:
+    driver: bridge

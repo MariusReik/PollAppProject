@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin(origins = {"http://localhost:5173", "http://pollapp-frontend:5173"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/polls")
 public class PollController {

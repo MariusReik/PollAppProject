@@ -1,117 +1,73 @@
 <template>
-  <div class="create-poll">
+  <section class="panel">
     <h2>Create Poll</h2>
     <form @submit.prevent="createPoll">
-      <input
-          type="text"
-          v-model="creatorUsername"
-          placeholder="Your Username"
-          required
-      />
-      <input
-          type="text"
-          v-model="question"
-          placeholder="Poll Question"
-          required
-      />
-      <input
-          type="datetime-local"
-          v-model="validUntil"
-          required
-      />
+      <label>Question</label>
+      <input v-model="question" placeholder="Enter your question" required />
 
-      <div v-for="(option, index) in voteOptions" :key="index">
-        <input
-            type="text"
-            v-model="option.caption"
-            :placeholder="`Option ${index + 1}`"
-            required
-        />
+      <label>Options</label>
+      <div v-for="(opt, i) in options" :key="i" class="option">
+        <input v-model="options[i]" placeholder="Option" required />
+        <button type="button" @click="removeOption(i)">✕</button>
       </div>
 
       <button type="button" @click="addOption">Add Option</button>
-      <button type="submit">Create Poll</button>
+      <button type="submit">Create</button>
     </form>
-    <div v-if="message">{{ message }}</div>
-  </div>
+  </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { getCurrentInstance } from 'vue';
-import { useKeycloak } from '../composables/useKeycloak';
+import { ref, inject } from "vue";
+const keycloak = inject("keycloak");
+const question = ref("");
+const options = ref([""]);
 
-const creatorUsername = ref('')
-const question = ref('')
-const validUntil = ref('')
-const voteOptions = ref([
-  { caption: '', presentationOrder: 1 },
-  { caption: '', presentationOrder: 2 }
-])
-const message = ref('')
+const addOption = () => options.value.push("");
+const removeOption = (i) => options.value.splice(i, 1);
 
-const addOption = () => {
-  voteOptions.value.push({
-    caption: '',
-    presentationOrder: voteOptions.value.length + 1
-  })
-}
-
-// In CreatePollComponent - modify the createPoll function
 const createPoll = async () => {
   try {
-    const keycloak = useKeycloak();
-    const token = keycloak.token;
-
-    const response = await fetch('http://localhost:8080/polls', {
-      method: 'POST',
+    const token = keycloak?.token;
+    const res = await fetch("http://localhost:8081/polls", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
       },
       body: JSON.stringify({
         question: question.value,
-        creatorUsername: creatorUsername.value,
-        validUntil: new Date(validUntil.value).toISOString(),
-        voteOptions: voteOptions.value
+        options: options.value.filter(o => o.trim() !== "")
       })
     });
-
-    if (response.ok) {
-      message.value = 'Poll created successfully!'
-      // Reset form
-      question.value = ''
-      creatorUsername.value = ''
-      validUntil.value = ''
-      voteOptions.value = [
-        {caption: '', presentationOrder: 1},
-        {caption: '', presentationOrder: 2}
-      ]
-
-      // Refresh the page to show new poll
-      window.location.reload()
-    } else {
-      message.value = 'Failed to create poll'
-    }
-  } catch (error) {
-    message.value = 'Error: ' + error.message
+    if (!res.ok) throw new Error("Failed to create poll");
+    question.value = "";
+    options.value = [""];
+    alert("Poll created!");
+  } catch (e) {
+    console.error(e);
   }
-}
+};
 </script>
 
-<style scoped>
-.create-poll {
-  padding: 20px;
-  max-width: 400px;
+<style>
+.panel {
+  border: 1px solid #ccc;
+  padding: 16px;
+  margin-bottom: 20px;
+  border-radius: 8px;
 }
-
-form {
+.option {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
 }
-
-input, button {
-  padding: 10px;
+.option input {
+  flex: 1;
+  margin-right: 6px;
+}
+input {
+  width: 100%;
+  padding: 6px;
+  margin-bottom: 10px;
 }
 </style>
