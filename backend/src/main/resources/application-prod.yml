@@ -1,45 +1,32 @@
 spring:
+  application:
+    name: demo
+
   datasource:
     url: jdbc:postgresql://db:5432/pollapp
     username: pollapp
     password: pollapp
     driver-class-name: org.postgresql.Driver
 
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: guest
+    password: guest
+
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak:8080/realms/myrealm
-
-      client:
-        registration:
-          keycloak:
-            client-id: pollapp-backend
-            client-secret: your_secret_here
-            scope: openid,profile,email
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
-        provider:
-          keycloak:
-            issuer-uri: http://keycloak:8080/realms/myrealm
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
-
-  data:
-    redis:
-      host: redis
-      port: 6379
-
-  rabbitmq:
-    listener:
-      simple:
-        auto-startup: false
 
 server:
   port: 8080

@@ -1,85 +1,52 @@
 package no.hvl.pollapp.service;
 
-import no.hvl.pollapp.domain.Poll;
-import no.hvl.pollapp.domain.User;
-import no.hvl.pollapp.domain.Vote;
-import no.hvl.pollapp.domain.VoteOption;
-import no.hvl.pollapp.repository.PollRepository;
-import no.hvl.pollapp.repository.UserRepository;
-import no.hvl.pollapp.repository.VoteOptionRepository;
-import no.hvl.pollapp.repository.VoteRepository;
+import no.hvl.pollapp.domain.*;
+import no.hvl.pollapp.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
 public class PollManager {
 
     private final PollRepository pollRepository;
+    private final VoteOptionRepository voteOptionRepository;
     private final VoteRepository voteRepository;
     private final UserRepository userRepository;
-    private final VoteOptionRepository voteOptionRepository;
 
     public PollManager(PollRepository pollRepository,
+                       VoteOptionRepository voteOptionRepository,
                        VoteRepository voteRepository,
-                       UserRepository userRepository,
-                       VoteOptionRepository voteOptionRepository) {
+                       UserRepository userRepository) {
         this.pollRepository = pollRepository;
+        this.voteOptionRepository = voteOptionRepository;
         this.voteRepository = voteRepository;
         this.userRepository = userRepository;
-        this.voteOptionRepository = voteOptionRepository;
     }
 
-    @Transactional
-    public Poll createPoll(Poll poll) {
-        // Connect child options -> parent poll before saving
-        if (poll.getOptions() != null) {
-            poll.getOptions().forEach(opt -> opt.setPoll(poll));
-        }
-        return pollRepository.save(poll);
-    }
-
-    public List<Poll> getAllPolls() {
+    public List<Poll> listPolls() {
         return pollRepository.findAll();
     }
 
-    public Poll getPollOrThrow(Long id) {
-        return pollRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Poll not found: " + id));
-    }
-
-    public void deletePoll(Long id) {
-        pollRepository.deleteById(id);
+    @Transactional
+    public Poll createPoll(String question, List<String> options) {
+        Poll poll = new Poll(question);
+        poll = pollRepository.save(poll);
+        for (String text : options) {
+            voteOptionRepository.save(new VoteOption(text, poll));
+        }
+        return pollRepository.findById(poll.getId()).orElseThrow();
     }
 
     @Transactional
-    public Vote registerVote(Long pollId, Long optionId, String username) {
-        // ensure poll exists
-        Poll poll = getPollOrThrow(pollId);
-
-        // ensure option belongs to that poll
+    public Vote vote(Long optionId, String username) {
         VoteOption option = voteOptionRepository.findById(optionId)
-                .orElseThrow(() -> new IllegalArgumentException("Vote option not found: " + optionId));
-        if (option.getPoll() == null || !option.getPoll().getId().equals(poll.getId())) {
-            throw new IllegalArgumentException("Option " + optionId + " does not belong to poll " + pollId);
-        }
+                .orElseThrow(() -> new IllegalArgumentException("Option not found: " + optionId));
 
-        // find or create user
         User user = userRepository.findByUsername(username)
                 .orElseGet(() -> userRepository.save(new User(username)));
 
-        // Save vote
         Vote vote = new Vote(user, option);
         return voteRepository.save(vote);
-    }
-
-    public List<Vote> getVotesForPoll(Long pollId) {
-        // simple filter; you can add a custom query later for efficiency
-        return voteRepository.findAll().stream()
-                .filter(v -> v.getOption() != null
-                        && v.getOption().getPoll() != null
-                        && pollId.equals(v.getOption().getPoll().getId()))
-                .toList();
     }
 }

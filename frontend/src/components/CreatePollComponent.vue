@@ -1,73 +1,60 @@
-<template>
-  <section class="panel">
-    <h2>Create Poll</h2>
-    <form @submit.prevent="createPoll">
-      <label>Question</label>
-      <input v-model="question" placeholder="Enter your question" required />
-
-      <label>Options</label>
-      <div v-for="(opt, i) in options" :key="i" class="option">
-        <input v-model="options[i]" placeholder="Option" required />
-        <button type="button" @click="removeOption(i)">✕</button>
-      </div>
-
-      <button type="button" @click="addOption">Add Option</button>
-      <button type="submit">Create</button>
-    </form>
-  </section>
-</template>
-
 <script setup>
-import { ref, inject } from "vue";
-const keycloak = inject("keycloak");
-const question = ref("");
-const options = ref([""]);
+import { ref, inject } from 'vue';
 
-const addOption = () => options.value.push("");
-const removeOption = (i) => options.value.splice(i, 1);
+const keycloak = inject('keycloak');
+const question = ref('');
+const options = ref(['']);
 
-const createPoll = async () => {
+function addOption() {
+  options.value.push('');
+}
+
+function removeOption(index) {
+  options.value.splice(index, 1);
+}
+
+async function createPoll() {
   try {
-    const token = keycloak?.token;
-    const res = await fetch("http://localhost:8081/polls", {
-      method: "POST",
+    await keycloak.updateToken(30);
+
+    const pollData = {
+      question: question.value,
+      options: options.value.filter(o => o.trim() !== '').map(text => ({ text }))
+    };
+
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/polls`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
+        'Authorization': `Bearer ${keycloak.token}`,
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        question: question.value,
-        options: options.value.filter(o => o.trim() !== "")
-      })
+      body: JSON.stringify(pollData)
     });
-    if (!res.ok) throw new Error("Failed to create poll");
-    question.value = "";
-    options.value = [""];
-    alert("Poll created!");
-  } catch (e) {
-    console.error(e);
+
+    if (!response.ok) throw new Error('Failed to create poll');
+    console.log('✅ Poll created successfully');
+  } catch (error) {
+    console.error('❌ Error creating poll:', error);
   }
-};
+}
 </script>
 
-<style>
-.panel {
-  border: 1px solid #ccc;
-  padding: 16px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-}
-.option {
-  display: flex;
-  align-items: center;
-}
-.option input {
-  flex: 1;
-  margin-right: 6px;
-}
-input {
-  width: 100%;
-  padding: 6px;
-  margin-bottom: 10px;
-}
-</style>
+<template>
+  <div class="p-6">
+    <h2 class="text-2xl font-bold mb-4">Create a Poll</h2>
+    <form @submit.prevent="createPoll">
+      <div class="mb-4">
+        <label class="block text-sm font-medium">Question:</label>
+        <input v-model="question" class="border p-2 w-full" placeholder="Enter your question" />
+      </div>
+
+      <div v-for="(opt, index) in options" :key="index" class="mb-2 flex">
+        <input v-model="options[index]" class="border p-2 flex-1" placeholder="Option text" />
+        <button type="button" @click="removeOption(index)" class="ml-2 text-red-500">Remove</button>
+      </div>
+
+      <button type="button" @click="addOption" class="text-blue-500 mb-4">Add Option</button>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Create Poll</button>
+    </form>
+  </div>
+</template>

@@ -1,30 +1,40 @@
 package no.hvl.pollapp.domain;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 public class VoteOption {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String text;
+    @Column(nullable = false)
+    private String optionText;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "poll_id")
+    @JsonBackReference
     private Poll poll;
 
-    public VoteOption() {}
+    @OneToMany(mappedBy = "option", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Vote> votes;
 
-    public VoteOption(String text, Poll poll) {
-        this.text = text;
+    public VoteOption() {}
+    public VoteOption(String optionText, Poll poll) {
+        this.optionText = optionText;
         this.poll = poll;
     }
 
     public Long getId() { return id; }
-    public String getText() { return text; }
-    public void setText(String text) { this.text = text; }
+    public String getOptionText() { return optionText; }
     public Poll getPoll() { return poll; }
+    public List<Vote> getVotes() { return votes; }
+
+    public void setId(Long id) { this.id = id; }
+    public void setOptionText(String optionText) { this.optionText = optionText; }
     public void setPoll(Poll poll) { this.poll = poll; }
+    public void setVotes(List<Vote> votes) { this.votes = votes; }
 }
