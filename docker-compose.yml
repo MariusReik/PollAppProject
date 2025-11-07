@@ -1,13 +1,12 @@
-version: '3.9'
-
 services:
   db:
     image: postgres:16
     container_name: pollapp-db
+    restart: always
     environment:
-      POSTGRES_DB: pollapp
       POSTGRES_USER: pollapp
       POSTGRES_PASSWORD: pollapp
+      POSTGRES_DB: pollapp
     ports:
       - "5432:5432"
     volumes:
@@ -15,27 +14,10 @@ services:
     networks:
       - pollnet
 
-  redis:
-    image: redis:latest
-    container_name: pollapp-redis
-    ports:
-      - "6379:6379"
-    networks:
-      - pollnet
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: pollapp-rabbit
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    networks:
-      - pollnet
-
   keycloak:
     image: quay.io/keycloak/keycloak:25.0.6
     container_name: pollapp-keycloak
-    command: start-dev --hostname=keycloak  --hostname-strict=false
+    command: start-dev --hostname-strict=false
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -53,19 +35,25 @@ services:
       - pollnet
 
 
+
   backend:
     build: ./backend
     container_name: pollapp-backend
-    environment:
-      - SPRING_PROFILES_ACTIVE=prod
-    ports:
-      - "8081:8080"
+    restart: always
     depends_on:
       - db
-      - redis
-      - rabbitmq
       - keycloak
-    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pollapp
+      SPRING_DATASOURCE_USERNAME: pollapp
+      SPRING_DATASOURCE_PASSWORD: pollapp
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8082/realms/pollapp-realm
+      KEYCLOAK_AUTH_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: pollapp-realm
+      KEYCLOAK_RESOURCE: pollapp-backend
+    ports:
+      - "8081:8080"
     networks:
       - pollnet
 
@@ -74,21 +62,29 @@ services:
     container_name: pollapp-frontend
     ports:
       - "5173:5173"
-    environment:
-      - VITE_KEYCLOAK_URL=http://localhost:8082
-      - VITE_KEYCLOAK_REALM=myrealm
-      - VITE_KEYCLOAK_CLIENT_ID=myclient
-      - VITE_API_URL=http://localhost:8081
     depends_on:
       - backend
+      - keycloak
+    environment:
+      VITE_KEYCLOAK_URL: http://localhost:8082
+      VITE_KEYCLOAK_REALM: pollapp-realm
+      VITE_KEYCLOAK_CLIENT_ID: pollapp-frontend
+      VITE_API_URL: http://localhost:8081
     networks:
       - pollnet
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: pollapp-rabbit
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - pollnet
+
+networks:
+  pollnet:
 
 volumes:
   postgres_data:
   keycloak_data:
-
-
-networks:
-  pollnet:
-    driver: bridge

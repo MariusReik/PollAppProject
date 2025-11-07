@@ -2,11 +2,24 @@
 <project version="4">
   <component name="dataSourceStorageLocal" created-in="IU-252.25557.131">
     <data-source name="0@localhost" uuid="f5769806-f701-491c-8b6b-28c568b98430">
-      <database-info product="Redis Standalone" version="7.2.4" jdbc-version="4.2" driver-name="Redis JDBC Driver" driver-version="1.5" dbms="REDIS" exact-version="7.2.4" exact-driver-version="1.5">
-        <jdbc-catalog-is-schema>true</jdbc-catalog-is-schema>
-      </database-info>
+      <database-info product="Redis Standalone" version="7.2.4" jdbc-version="4.2" driver-name="Redis JDBC Driver" driver-version="1.5" dbms="REDIS" exact-version="7.2.4" exact-driver-version="1.5" />
       <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
       <user-name>admin</user-name>
+      <schema-mapping />
+    </data-source>
+    <data-source name="pollapp@db" uuid="5e090b5a-d68a-469b-9741-fea403329205">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <user-name>pollapp</user-name>
+      <schema-mapping />
+    </data-source>
+    <data-source name="pollapp" uuid="ed54a5e1-5364-4746-8687-2023a434c732">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="H2" />
+      <user-name>pollapp</user-name>
+      <schema-mapping />
+    </data-source>
+    <data-source name="pollapp@localhost" uuid="3b5a5eab-3154-4f6e-b56c-4f1982813ecc">
+      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES" />
+      <user-name>pollapp</user-name>
       <schema-mapping />
     </data-source>
   </component>

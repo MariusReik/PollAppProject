@@ -32,9 +32,9 @@ async function createPoll() {
     });
 
     if (!response.ok) throw new Error('Failed to create poll');
-    console.log('✅ Poll created successfully');
+    console.log('Poll created successfully');
   } catch (error) {
-    console.error('❌ Error creating poll:', error);
+    console.error('Error creating poll:', error);
   }
 }
 </script>
