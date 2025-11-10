@@ -1,52 +1,45 @@
 package no.hvl.pollapp.service;
 
-import no.hvl.pollapp.domain.*;
-import no.hvl.pollapp.repository.*;
+import no.hvl.pollapp.domain.Poll;
+import no.hvl.pollapp.domain.VoteOption;
+import no.hvl.pollapp.repository.PollRepository;
+import no.hvl.pollapp.repository.VoteOptionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 
 @Service
+@Transactional
 public class PollManager {
 
     private final PollRepository pollRepository;
     private final VoteOptionRepository voteOptionRepository;
-    private final VoteRepository voteRepository;
-    private final UserRepository userRepository;
 
-    public PollManager(PollRepository pollRepository,
-                       VoteOptionRepository voteOptionRepository,
-                       VoteRepository voteRepository,
-                       UserRepository userRepository) {
+    public PollManager(PollRepository pollRepository, VoteOptionRepository voteOptionRepository) {
         this.pollRepository = pollRepository;
         this.voteOptionRepository = voteOptionRepository;
-        this.voteRepository = voteRepository;
-        this.userRepository = userRepository;
     }
 
-    public List<Poll> listPolls() {
-        return pollRepository.findAll();
+    public List<Poll> getAllPolls() {
+        List<Poll> polls = pollRepository.findAll();
+        // Initialize options to avoid lazy loading issues during JSON serialization
+        polls.forEach(p -> p.getOptions().size());
+        return polls;
     }
 
-    @Transactional
-    public Poll createPoll(String question, List<String> options) {
-        Poll poll = new Poll(question);
-        poll = pollRepository.save(poll);
-        for (String text : options) {
-            voteOptionRepository.save(new VoteOption(text, poll));
+    public Poll createPoll(Poll poll) {
+        Poll saved = pollRepository.save(poll);
+        if (poll.getOptions() != null) {
+            for (VoteOption option : poll.getOptions()) {
+                option.setPoll(saved);
+                voteOptionRepository.save(option);
+            }
         }
-        return pollRepository.findById(poll.getId()).orElseThrow();
+        return saved;
     }
 
-    @Transactional
-    public Vote vote(Long optionId, String username) {
-        VoteOption option = voteOptionRepository.findById(optionId)
-                .orElseThrow(() -> new IllegalArgumentException("Option not found: " + optionId));
-
-        User user = userRepository.findByUsername(username)
-                .orElseGet(() -> userRepository.save(new User(username)));
-
-        Vote vote = new Vote(user, option);
-        return voteRepository.save(vote);
+    public Poll getPollById(Long id) {
+        return pollRepository.findById(id).orElse(null);
     }
 }

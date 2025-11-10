@@ -2,17 +2,16 @@ package no.hvl.pollapp.controller;
 
 import no.hvl.pollapp.domain.Poll;
 import no.hvl.pollapp.service.PollManager;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/polls")
+@RequestMapping("/api/polls")
 @CrossOrigin(origins = "http://localhost:5173")
 public class PollController {
-
-    private record CreatePollRequest(String question, List<String> options) {}
 
     private final PollManager pollManager;
 
@@ -21,16 +20,33 @@ public class PollController {
     }
 
     @GetMapping
-    public List<Poll> getAll() {
-        return pollManager.listPolls();
+    public ResponseEntity<List<Poll>> getAllPolls() {
+        try {
+            List<Poll> polls = pollManager.getAllPolls();
+            return ResponseEntity.ok(polls);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping
-    public ResponseEntity<Poll> create(@RequestBody CreatePollRequest req) {
-        if (req == null || req.question() == null || req.question().isBlank()) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<Poll> createPoll(@RequestBody Poll poll) {
+        try {
+            Poll created = pollManager.createPoll(poll);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        Poll saved = pollManager.createPoll(req.question(), req.options() == null ? List.of() : req.options());
-        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Poll> getPollById(@PathVariable Long id) {
+        Poll poll = pollManager.getPollById(id);
+        if (poll == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(poll);
     }
 }

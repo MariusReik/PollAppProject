@@ -1,5 +1,10 @@
 import Keycloak from "keycloak-js";
 
+const keycloakUrl =
+    import.meta.env.VITE_DOCKER_ENV === 'true'
+        ? 'http://keycloak:8080'
+        : 'http://localhost:8082';
+
 const keycloak = new Keycloak({
     url: "http://localhost:8082",
     realm: "pollapp-realm",
