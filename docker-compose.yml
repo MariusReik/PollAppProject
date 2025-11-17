@@ -49,6 +49,9 @@ services:
       - pollnet
 
   backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     image: dat250-project-backend
     container_name: pollapp-backend
     depends_on:
@@ -71,6 +74,9 @@ services:
 
 
   frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     image: dat250-project-frontend
     container_name: pollapp-frontend
     ports:

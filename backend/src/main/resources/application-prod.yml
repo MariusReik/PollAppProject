@@ -26,8 +26,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8082/realms/pollapp-realm
-          jwk-set-uri: http://keycloak:8080/realms/pollapp-realm/protocol/openid-connect/certs
+          issuer-uri: http://keycloak:8080/realms/pollapp-realm
 
 server:
   error:

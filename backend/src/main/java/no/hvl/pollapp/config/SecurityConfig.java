@@ -20,8 +20,8 @@ import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 public class SecurityConfig {
     @Bean
     JwtDecoder jwtDecoder() {
-        String issuerUri = "http://keycloak:8080/realms/pollapp-realm";
-        String jwkSetUri = issuerUri + "/protocol/openid-connect/certs";
+        String issuerUri = "http://localhost:8082/realms/pollapp-realm";
+        String jwkSetUri = "http://keycloak:8080/realms/pollapp-realm/protocol/openid-connect/certs";
 
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
 
