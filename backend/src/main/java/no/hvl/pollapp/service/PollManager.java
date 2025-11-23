@@ -29,15 +29,15 @@ public class PollManager {
     }
 
     public Poll createPoll(Poll poll) {
-        Poll saved = pollRepository.save(poll);
         if (poll.getOptions() != null) {
             for (VoteOption option : poll.getOptions()) {
-                option.setPoll(saved);
-                voteOptionRepository.save(option);
+                option.setPoll(poll);
             }
         }
-        return saved;
+
+        return pollRepository.save(poll);
     }
+
 
     public Poll getPollById(Long id) {
         return pollRepository.findById(id).orElse(null);

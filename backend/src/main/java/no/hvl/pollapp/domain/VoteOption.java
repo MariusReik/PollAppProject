@@ -1,7 +1,7 @@
 package no.hvl.pollapp.domain;
 
-import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "vote_option")
@@ -20,11 +20,10 @@ public class VoteOption {
     @JsonIgnoreProperties("options")
     private Poll poll;
 
-    public VoteOption() {}
+    @Transient
+    private int voteCount;
 
-    public VoteOption(String text, Poll poll) {
-        this.text = text;
-        this.poll = poll;
+    public VoteOption() {
     }
 
     public Long getId() {
@@ -49,5 +48,13 @@ public class VoteOption {
 
     public void setPoll(Poll poll) {
         this.poll = poll;
+    }
+
+    public int getVoteCount() {
+        return voteCount;
+    }
+
+    public void setVoteCount(int voteCount) {
+        this.voteCount = voteCount;
     }
 }

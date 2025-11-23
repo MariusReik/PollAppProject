@@ -50,4 +50,13 @@ public class Poll {
     public void setOptions(List<VoteOption> options) {
         this.options = options;
     }
+
+    public void addOption(VoteOption option) {
+        if (options == null) {
+            options = new ArrayList<>();
+        }
+        options.add(option);
+        option.setPoll(this);
+    }
+
 }
